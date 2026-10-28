@@ -1,0 +1,182 @@
+#include <stdio.h>
+
+#define MAX 50
+
+struct Package {
+    int id;
+    float value;
+    float weight;
+    float ratio;
+    float fraction;
+};
+
+void enterDetails(struct Package p[], int *n, float *capacity) {
+    printf("Enter number of packages: ");
+    scanf("%d", n);
+    for (int i = 0; i < *n; i++) {
+        p[i].id = i + 1;
+        printf("\nPackage %d:\n", p[i].id);
+        printf("  Enter Value: ");
+        scanf("%f", &p[i].value);
+        printf("  Enter Weight: ");
+        scanf("%f", &p[i].weight);
+        p[i].ratio = 0;
+        p[i].fraction = 0;
+    }
+    printf("Enter maximum vehicle capacity: ");
+    scanf("%f", capacity);
+    printf("\nPackage details entered successfully!\n");
+}
+
+void displayDetails(struct Package p[], int n) {
+    if (n == 0) {
+        printf("\nNo packages entered yet. Please use Option 1 first.\n");
+        return;
+    }
+    printf("\n-------------------------------------------------\n");
+    printf("ID\tValue\tWeight\n");
+    printf("-------------------------------------------------\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%.2f\t%.2f\n", p[i].id, p[i].value, p[i].weight);
+    }
+    printf("-------------------------------------------------\n");
+}
+
+void calculateRatio(struct Package p[], int n) {
+    if (n == 0) {
+        printf("\nNo packages entered yet.\n");
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        p[i].ratio = p[i].value / p[i].weight;
+    }
+    printf("\n-------------------------------------------------\n");
+    printf("ID\tValue\tWeight\tValue/Weight Ratio\n");
+    printf("-------------------------------------------------\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%.2f\t%.2f\t%.2f\n", p[i].id, p[i].value, p[i].weight, p[i].ratio);
+    }
+    printf("-------------------------------------------------\n");
+}
+
+void sortPackages(struct Package p[], int n) {
+    if (n == 0) {
+        printf("\nNo packages entered yet.\n");
+        return;
+    }
+    struct Package temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (p[j].ratio < p[j + 1].ratio) {
+                temp = p[j];
+                p[j] = p[j + 1];
+                p[j + 1] = temp;
+            }
+        }
+    }
+    printf("\nPackages sorted in decreasing order of Value/Weight ratio successfully!\n");
+}
+
+float findMaxValue(struct Package p[], int n, float capacity, float *totalWeightUsed) {
+    if (n == 0) return 0;
+    
+    for (int i = 0; i < n; i++) {
+        p[i].fraction = 0.0;
+    }
+
+    float currentWeight = 0.0;
+    float totalValue = 0.0;
+
+    for (int i = 0; i < n; i++) {
+        if (currentWeight + p[i].weight <= capacity) {
+            currentWeight += p[i].weight;
+            totalValue += p[i].value;
+            p[i].fraction = 1.0;
+        } else {
+            float remaining = capacity - currentWeight;
+            p[i].fraction = remaining / p[i].weight;
+            totalValue += p[i].value * p[i].fraction;
+            currentWeight += remaining;
+            break;
+        }
+    }
+    *totalWeightUsed = currentWeight;
+    return totalValue;
+}
+
+void displaySelectedPackages(struct Package p[], int n, float capacity) {
+    if (n == 0) {
+        printf("\nNo packages entered yet.\n");
+        return;
+    }
+    float totalWeightUsed = 0;
+    float maxVal = findMaxValue(p, n, capacity, &totalWeightUsed);
+
+    printf("\n-------------------------------------------------\n");
+    printf("ID\tValue\tWeight\tFraction Selected\n");
+    printf("-------------------------------------------------\n");
+    for (int i = 0; i < n; i++) {
+        if (p[i].fraction > 0.0) {
+            printf("%d\t%.2f\t%.2f\t%.2f (%.0f%%)\n", p[i].id, p[i].value, p[i].weight, p[i].fraction, p[i].fraction * 100);
+        }
+    }
+    printf("-------------------------------------------------\n");
+    printf("Total Weight Used: %.2f / %.2f\n", totalWeightUsed, capacity);
+    printf("Maximum Achievable Value: %.2f\n", maxVal);
+    printf("-------------------------------------------------\n");
+}
+
+int main() {
+    struct Package p[MAX];
+    int n = 0;
+    float capacity = 0.0;
+    int choice;
+
+    do {
+        printf("\n=== SMART DELIVERY PLANNING: FRACTIONAL KNAPSACK ===\n");
+        printf("1. Enter Package Details\n");
+        printf("2. Display Package Details\n");
+        printf("3. Calculate Value/Weight Ratio\n");
+        printf("4. Sort Packages by Ratio\n");
+        printf("5. Find Maximum Value\n");
+        printf("6. Display Selected Packages\n");
+        printf("7. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                enterDetails(p, &n, &capacity);
+                break;
+            case 2:
+                displayDetails(p, n);
+                break;
+            case 3:
+                calculateRatio(p, n);
+                break;
+            case 4:
+                sortPackages(p, n);
+                break;
+            case 5: {
+                if (n == 0) {
+                    printf("\nNo packages entered yet.\n");
+                    break;
+                }
+                float totalWeightUsed = 0;
+                float maxVal = findMaxValue(p, n, capacity, &totalWeightUsed);
+                printf("\nMaximum Achievable Value: %.2f (Total Weight Used: %.2f)\n", maxVal, totalWeightUsed);
+                break;
+            }
+            case 6:
+                displaySelectedPackages(p, n, capacity);
+                break;
+            case 7:
+                printf("\nExiting program. Thank you!\n");
+                break;
+            default:
+                printf("\nInvalid choice! Please enter a number between 1 and 7.\n");
+        }
+    } while (choice != 7);
+
+    return 0;
+}
